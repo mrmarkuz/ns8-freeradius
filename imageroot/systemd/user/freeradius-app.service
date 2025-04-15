@@ -1,0 +1,36 @@
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+[Unit]
+Description=Podman  freeradius-app.service
+BindsTo=freeradius.service
+After=freeradius.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%S/state/environment
+EnvironmentFile=-%S/state/smarthost.env
+WorkingDirectory=%S/state
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/mkdir -p tmp
+ExecStartPre=/bin/rm -f %t/freeradius-app.pid %t/freeradius-app.ctr-id
+ExecStartPre=-runagent discover-smarthost
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/freeradius-app.pid \
+    --cidfile %t/freeradius-app.ctr-id --cgroups=no-conmon \
+    --pod-id-file %t/freeradius.pod-id --replace -d --name  freeradius-app \
+    --volume freeradius-app:/var/www/html/:Z \
+    --volume ./tmp:/tmp:Z \
+    --env ENV_VAR=test \
+    ${NGINX_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/freeradius-app.ctr-id -t 10
+ExecReload=/usr/bin/podman kill -s HUP freeradius-app
+SyslogIdentifier=%u
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/freeradius-app.ctr-id
+PIDFile=%t/freeradius-app.pid
+Type=forking
+
+[Install]
+WantedBy=default.target
