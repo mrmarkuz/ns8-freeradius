@@ -15,16 +15,13 @@ EnvironmentFile=-%S/state/smarthost.env
 WorkingDirectory=%S/state
 Restart=always
 TimeoutStopSec=70
-ExecStartPre=/bin/mkdir -p tmp
 ExecStartPre=/bin/rm -f %t/freeradius-app.pid %t/freeradius-app.ctr-id
 ExecStartPre=-runagent discover-smarthost
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/freeradius-app.pid \
     --cidfile %t/freeradius-app.ctr-id --cgroups=no-conmon \
     --pod-id-file %t/freeradius.pod-id --replace -d --name  freeradius-app \
-    --volume freeradius-app:/var/www/html/:Z \
-    --volume ./tmp:/tmp:Z \
-    --env ENV_VAR=test \
-    ${NGINX_IMAGE}
+    --volume freeradius-app:/etc/raddb:Z \
+    ${FREERADIUS_SERVER_IMAGE}
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/freeradius-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP freeradius-app
 SyslogIdentifier=%u
