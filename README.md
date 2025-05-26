@@ -36,11 +36,25 @@ The config files are available in the config `config` directory:
 - clients.conf
 - mschap
 
+Test basic function:
+
+```
+[freeradius1@ns8rockytest state]$ radtest bob test 192.168.1.10:1812 10 testing123
+Sent Access-Request Id 52 from 0.0.0.0:54694 to 192.168.1.10:1812 length 73
+	User-Name = "bob"
+	User-Password = "test"
+	NAS-IP-Address = 127.0.1.1
+	NAS-Port = 10
+	Cleartext-Password = "test"
+Received Access-Accept Id 52 from 192.168.1.10:1812 to 192.168.1.10:54694 length 38
+	Message-Authenticator = 0x6638...
+```
+
 To enter the freeradius container:
 
     podman exec -ti freeradius-app bash
 
-Docker container documentation: https://hub.docker.com/r/freeradius/freeradius-server/
+Docker freeradius container documentation: https://hub.docker.com/r/freeradius/freeradius-server/
 
 ## Uninstall
 
