@@ -1,0 +1,54 @@
+# LDAP module for the NS8 user domain bound to this instance.
+# Generated file: changes are lost at the next start.
+ldap {
+	# Ldapproxy of the node: plain LDAP on the loopback interface, which
+	# the container reaches as 10.0.2.2. Ldapproxy talks TLS to the
+	# account provider and follows it when it moves.
+	server = '@LDAP_HOST@'
+	port = @LDAP_PORT@
+	identity = '@LDAP_BIND_DN@'
+	password = '@LDAP_BIND_PASSWORD@'
+	base_dn = '@LDAP_BASE_DN@'
+
+	update {
+		control:Password-With-Header	+= 'userPassword'
+	}
+
+	user {
+		base_dn = "${..base_dn}"
+		filter = "@LDAP_USER_FILTER@"
+		scope = 'sub'
+	}
+
+	group {
+		base_dn = "${..base_dn}"
+		filter = '@LDAP_GROUP_FILTER@'
+		scope = 'sub'
+		name_attribute = cn
+		membership_attribute = 'memberOf'
+	}
+
+	options {
+		chase_referrals = no
+		rebind = no
+		res_timeout = 10
+		srv_timelimit = 3
+		net_timeout = 3
+		idle = 60
+		probes = 3
+		interval = 3
+	}
+
+	pool {
+		# do not connect at start: the server must come up while the
+		# account provider is down or no domain is bound
+		start = 0
+		min = 0
+		max = 10
+		spare = 2
+		uses = 0
+		retry_delay = 30
+		lifetime = 0
+		idle_timeout = 60
+	}
+}

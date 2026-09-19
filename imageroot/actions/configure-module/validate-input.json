@@ -14,7 +14,8 @@
                     "ipaddr": "192.168.1.10",
                     "secret": "use-a-long-random-string"
                 }
-            ]
+            ],
+            "ldap_domain": "ad.example.org"
         }
     ],
     "type": "object",
@@ -72,6 +73,11 @@
                     }
                 }
             }
+        },
+        "ldap_domain": {
+            "type": "string",
+            "title": "User domain",
+            "description": "NS8 user domain whose accounts can log in; an empty string means none. When the property is missing the binding is not changed."
         }
     }
 }

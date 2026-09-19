@@ -14,7 +14,8 @@
                     "ipaddr": "192.168.1.10",
                     "secret": "use-a-long-random-string"
                 }
-            ]
+            ],
+            "ldap_domain": "ad.example.org"
         }
     ],
     "type": "object",
@@ -22,7 +23,8 @@
         "host",
         "http2https",
         "lets_encrypt",
-        "clients"
+        "clients",
+        "ldap_domain"
     ],
     "properties": {
         "host": {
@@ -71,6 +73,11 @@
                     }
                 }
             }
+        },
+        "ldap_domain": {
+            "type": "string",
+            "title": "User domain",
+            "description": "NS8 user domain whose accounts can log in; an empty string means none"
         }
     }
 }

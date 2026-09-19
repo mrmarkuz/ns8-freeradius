@@ -96,7 +96,91 @@ def _template(name):
         return fp.read()
 
 
+LDAP_AUTHORIZE = """\
+	# user domain: look the account up; with a clear text password (PAP,
+	# TTLS/PAP) the password is checked by binding as that account
+	ldap {
+		fail = 1
+	}
+	if ((ok || updated) && &User-Password && !&control:Auth-Type) {
+		update control {
+			&Auth-Type := ldap
+		}
+	}"""
+
+LDAP_AUTHENTICATE = """\
+	Auth-Type LDAP {
+		ldap
+	}"""
+
+# Address of the node's loopback interface seen from a container started with
+# --network=slirp4netns:allow_host_loopback=true
+HOST_LOOPBACK = "10.0.2.2"
+
+
+def _sq(value):
+    """Escape a value for a single quoted string of the FreeRADIUS config."""
+    return str(value).replace("\\", "\\\\").replace("'", "\\'")
+
+
+def ldap_domain_settings(domain):
+    """Connection parameters of a user domain, None if it cannot be used."""
+    if not domain:
+        return None
+    from agent.ldapproxy import Ldapproxy
+    try:
+        odom = Ldapproxy().get_domain(domain)
+        odom["port"]  # raises if the domain is unknown
+    except Exception:
+        return None
+    return odom
+
+
+def render_ldap(odom):
+    if odom is None:
+        # The module is loaded in any case (its file is a fixed mount of the
+        # container). Without a domain nothing refers to it and, with
+        # pool.start = 0, it never opens a connection.
+        odom = {"port": 9, "bind_dn": "", "bind_password": "", "base_dn": "dc=invalid", "schema": "rfc2307"}
+    user = "%{%{Stripped-User-Name}:-%{User-Name}}"
+    if odom["schema"] == "ad":
+        # enabled user accounts only (userAccountControl bit 2 = disabled)
+        user_filter = f"(&(objectClass=user)(!(objectClass=computer))(sAMAccountName={user})(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+        group_filter = "(objectClass=group)"
+    else:
+        user_filter = f"(&(objectClass=posixAccount)(uid={user}))"
+        group_filter = "(objectClass=posixGroup)"
+    out = _template("ldap-domain")
+    for key, value in {
+        "@LDAP_HOST@": HOST_LOOPBACK,
+        "@LDAP_PORT@": str(odom["port"]),
+        "@LDAP_BIND_DN@": _sq(odom["bind_dn"]),
+        "@LDAP_BIND_PASSWORD@": _sq(odom["bind_password"]),
+        "@LDAP_BASE_DN@": _sq(odom["base_dn"]),
+        "@LDAP_USER_FILTER@": user_filter,
+        "@LDAP_GROUP_FILTER@": group_filter,
+    }.items():
+        out = out.replace(key, value)
+    return out
+
+
+def render_site(name, with_ldap):
+    out = _template(name)
+    out = out.replace("@LDAP_AUTHORIZE@", LDAP_AUTHORIZE if with_ldap else "\t# no user domain bound")
+    out = out.replace("@LDAP_AUTHENTICATE@", LDAP_AUTHENTICATE if with_ldap else "")
+    return out
+
+
 def expand():
     os.makedirs(GENERATED_DIR, mode=0o700, exist_ok=True)
     _write_private(os.path.join(GENERATED_DIR, "eap"), _template("eap"))
+    domain = os.environ.get("RADIUS_LDAP_DOMAIN", "")
+    odom = ldap_domain_settings(domain)
+    if domain and odom is None:
+        import sys
+        import agent
+        print(agent.SD_WARNING + f"user domain {domain} is not available: accounts of the domain cannot log in", file=sys.stderr)
+    _write_private(os.path.join(GENERATED_DIR, "ldap"), render_ldap(odom))
+    _write_private(os.path.join(GENERATED_DIR, "site-default"), render_site("site-default", odom is not None))
+    _write_private(os.path.join(GENERATED_DIR, "site-inner-tunnel"), render_site("site-inner-tunnel", odom is not None))
     _write_private(os.path.join(GENERATED_DIR, "clients.conf"), render_clients_conf(read_clients()))

@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 tebbi
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# The settings of a user domain changed (provider moved, bind credentials
+# changed, domain removed): rebuild the LDAP configuration by restarting.
+
+import json
+import os
+import sys
+
+import agent
+
+event = json.load(sys.stdin)
+domain = os.environ.get("RADIUS_LDAP_DOMAIN", "")
+
+if not domain or domain not in event.get("domains", []):
+    sys.exit(0)
+
+agent.run_helper('systemctl', '--user', '-T', 'try-restart', 'freeradius-app.service')

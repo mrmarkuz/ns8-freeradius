@@ -1,0 +1,64 @@
+# Virtual server "inner-tunnel" (inside PEAP and TTLS) of the NS8 FreeRADIUS
+# module. Generated file: changes are lost at the next start.
+server inner-tunnel {
+listen {
+	ipaddr = 127.0.0.1
+	port = 18120
+	type = auth
+}
+
+authorize {
+	filter_username
+	if (&User-Name =~ /^([^\\\\]*\\\\)?([^@\\\\]+)(@.*)?$/) {
+		update request {
+			&Stripped-User-Name := "%{2}"
+		}
+	}
+	chap
+	mschap
+	update control {
+		&Proxy-To-Realm := LOCAL
+	}
+	eap {
+		ok = return
+	}
+	files
+@LDAP_AUTHORIZE@
+	expiration
+	logintime
+	pap
+}
+
+authenticate {
+	Auth-Type PAP {
+		pap
+	}
+	Auth-Type CHAP {
+		chap
+	}
+	Auth-Type MS-CHAP {
+		mschap
+	}
+@LDAP_AUTHENTICATE@
+	eap
+}
+
+session {
+}
+
+post-auth {
+	Post-Auth-Type REJECT {
+		attr_filter.access_reject
+		update outer.session-state {
+			&Module-Failure-Message := &request:Module-Failure-Message
+		}
+	}
+}
+
+pre-proxy {
+}
+
+post-proxy {
+	eap
+}
+}
