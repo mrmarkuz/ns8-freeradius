@@ -1,9 +1,11 @@
 {
   "name": "freeradius",
   "description": {
-    "en": "My freeradius module"
+    "en": "FreeRADIUS server: RADIUS authentication and accounting (e.g. WPA-Enterprise Wi-Fi, VPN, switches)"
   },
-  "categories": [],
+  "categories": [
+    "security"
+  ],
   "authors": [
     {
       "name": "Name Surname",
@@ -11,9 +13,9 @@
     }
   ],
   "docs": {
-    "documentation_url": "https://docs.freeradius.com/",
-    "bug_url": "https://github.com/NethServer/dev",
-    "code_url": "https://github.com/author/ns8-freeradius"
+    "documentation_url": "https://github.com/mrmarkuz/ns8-freeradius#readme",
+    "bug_url": "https://github.com/mrmarkuz/ns8-freeradius/issues",
+    "code_url": "https://github.com/mrmarkuz/ns8-freeradius"
   },
-  "source": "ghcr.io/nethserver/freeradius"
+  "source": "ghcr.io/mrmarkuz/freeradius"
 }
