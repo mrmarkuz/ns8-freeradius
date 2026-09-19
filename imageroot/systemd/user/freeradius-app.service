@@ -16,10 +16,10 @@ WorkingDirectory=%S/state
 Restart=always
 TimeoutStopSec=70
 ExecStartPre=/bin/mkdir -p config/
-ExecStartPre=/usr/bin/cp -u ../templates/authorize config/
-ExecStartPre=/usr/bin/cp -u ../templates/clients.conf config/
-ExecStartPre=/usr/bin/cp -u ../templates/mschap config/
-ExecStartPre=/usr/bin/cp -u ../templates/ldap config/
+ExecStartPre=/usr/bin/cp -n ../templates/authorize config/
+ExecStartPre=/usr/bin/cp -n ../templates/clients.conf config/
+ExecStartPre=/usr/bin/cp -n ../templates/mschap config/
+ExecStartPre=/usr/bin/cp -n ../templates/ldap config/
 ExecStartPre=/bin/rm -f %t/freeradius-app.pid %t/freeradius-app.ctr-id
 ExecStartPre=-runagent discover-smarthost
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/freeradius-app.pid \
@@ -29,7 +29,7 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/freeradius-app.pid \
     --volume %S/state/config/authorize:/etc/raddb/mods-config/files/authorize:Z \
     --volume %S/state/config/mschap:/etc/raddb/mods-available/mschap:Z \
     --volume %S/state/config/ldap:/etc/raddb/mods-available/ldap:Z \
-    ${FREERADIUS_SERVER_IMAGE}
+    ${FREERADIUS_SERVER_IMAGE} -l stdout
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/freeradius-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP freeradius-app
 SyslogIdentifier=%u
