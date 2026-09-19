@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 tebbi
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Rebuild state/generated/ from the module settings. Runs before every start
+# of the server (ExecStartPre), with state/ as working directory.
+
+import radiusconf
+
+radiusconf.expand()

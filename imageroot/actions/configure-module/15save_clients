@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 tebbi
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Store the RADIUS clients (NAS: access points, switches, VPN gateways).
+# The shared secrets stay out of the environment: they go to
+# state/clients.json (mode 0600). When "clients" is missing the stored list
+# is left alone, so callers that only know the older input keep working.
+
+import json
+import sys
+
+import agent
+import radiusconf
+
+data = json.load(sys.stdin)
+
+if "clients" not in data:
+    sys.exit(0)
+
+errors = radiusconf.validate_clients(data["clients"])
+if errors:
+    agent.set_status('validation-failed')
+    json.dump(errors, fp=sys.stdout)
+    sys.exit(3)
+
+radiusconf.write_clients([
+    {"name": c["name"], "ipaddr": c["ipaddr"], "secret": c["secret"]} for c in data["clients"]
+])
