@@ -17,5 +17,8 @@ configure_retval = agent.tasks.run(agent_id=os.environ['AGENT_ID'], action='conf
     "lets_encrypt": renv["TRAEFIK_LETS_ENCRYPT"] == "True",
     "host": renv["TRAEFIK_HOST"],
     "http2https": renv["TRAEFIK_HTTP2HTTPS"] == "True",
+    # binds the restored instance to the user domain again; the RADIUS
+    # clients come back with state/clients.json and are left as they are
+    "ldap_domain": renv.get("RADIUS_LDAP_DOMAIN", ""),
 })
 agent.assert_exp(configure_retval['exit_code'] == 0, "The configure-module subtask failed!")
