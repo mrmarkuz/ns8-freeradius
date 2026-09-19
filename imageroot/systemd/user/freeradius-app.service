@@ -7,6 +7,8 @@
 Description=Podman  freeradius-app.service
 BindsTo=freeradius.service
 After=freeradius.service
+Wants=get-certificate.service
+After=get-certificate.service
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
@@ -28,6 +30,8 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/freeradius-app.pid \
     --pod-id-file %t/freeradius.pod-id --replace -d --name  freeradius-app \
     --volume %S/state/generated/clients.conf:/etc/raddb/clients.conf:Z \
     --volume %S/state/config/clients.conf:/etc/raddb/clients.custom.conf:Z \
+    --volume %S/state/generated/eap:/etc/raddb/mods-available/eap:Z \
+    --volume %S/state/certs:/etc/raddb/nscerts:Z \
     --volume %S/state/config/authorize:/etc/raddb/mods-config/files/authorize:Z \
     --volume %S/state/config/mschap:/etc/raddb/mods-available/mschap:Z \
     --volume %S/state/config/ldap:/etc/raddb/mods-available/ldap:Z \

@@ -1,0 +1,48 @@
+# EAP configuration of the NS8 FreeRADIUS module.
+#
+# The server certificate is provided by the module: it is the certificate
+# Traefik holds for the host name set in the module settings (Let's Encrypt or
+# uploaded), or a self-signed one until such a certificate exists. The test
+# certificates that ship with the container image are never used: their private
+# key is public.
+eap {
+	default_eap_type = peap
+	timer_expire = 60
+	ignore_unknown_eap_types = no
+	cisco_accounting_username_bug = no
+	max_sessions = ${max_requests}
+
+	tls-config tls-common {
+		private_key_file = /etc/raddb/nscerts/server.key
+		certificate_file = /etc/raddb/nscerts/server.pem
+		# no ca_file: EAP-TLS with client certificates is not set up
+		cipher_list = "DEFAULT"
+		cipher_server_preference = no
+		tls_min_version = "1.2"
+		tls_max_version = "1.3"
+		ecdh_curve = ""
+		cache {
+			enable = no
+		}
+	}
+
+	ttls {
+		tls = tls-common
+		# the inner method is chosen by the client (PAP, MSCHAPv2, ...)
+		default_eap_type = mschapv2
+		copy_request_to_tunnel = no
+		use_tunneled_reply = no
+		virtual_server = "inner-tunnel"
+	}
+
+	peap {
+		tls = tls-common
+		default_eap_type = mschapv2
+		copy_request_to_tunnel = no
+		use_tunneled_reply = no
+		virtual_server = "inner-tunnel"
+	}
+
+	mschapv2 {
+	}
+}

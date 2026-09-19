@@ -22,6 +22,7 @@ ExecStartPre=/bin/rm -f %t/freeradius.pid %t/freeradius.pod-id
 ExecStartPre=/usr/bin/podman pod create --infra-conmon-pidfile %t/freeradius.pid \
     --pod-id-file %t/freeradius.pod-id \
     --name freeradius \
+    --userns=keep-id:uid=101,gid=101 \
     --publish 127.0.0.1:${TCP_PORT}:80 \
     --publish 1812-1813:1812-1813/udp \
     --replace

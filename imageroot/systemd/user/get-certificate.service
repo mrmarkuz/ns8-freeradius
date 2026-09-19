@@ -1,0 +1,12 @@
+[Unit]
+Description=Get the TLS certificate of the RADIUS server from Traefik
+
+[Service]
+Type=oneshot
+EnvironmentFile=%S/state/environment
+WorkingDirectory=%S/state
+SyslogIdentifier=%N
+ExecStart=-mkdir -vp certs
+# get-certificate writes the certificate Traefik holds for the host name. If
+# there is none and no file exists yet, it creates a self-signed one.
+ExecStart=-runagent get-certificate --cert-file=certs/server.pem --key-file=certs/server.key ${TRAEFIK_HOST}
