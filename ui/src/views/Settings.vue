@@ -61,12 +61,106 @@
                 $t("settings.enabled")
               }}</template>
             </cv-toggle>
-              <!-- advanced options -->
+            <NsComboBox
+              v-model.trim="ldapDomain"
+              :autoFilter="true"
+              :autoHighlight="true"
+              :title="$t('settings.ldap_domain')"
+              :label="$t('settings.choose_ldap_domain')"
+              :options="domainOptions"
+              :acceptUserInput="false"
+              :showItemType="true"
+              :invalid-message="$t(error.ldap_domain)"
+              :disabled="
+                loading.getConfiguration ||
+                loading.configureModule ||
+                loading.listUserDomains
+              "
+              tooltipAlignment="start"
+              tooltipDirection="top"
+              class="mg-bottom"
+              ref="ldap_domain"
+            >
+              <template slot="tooltip">
+                {{ $t("settings.ldap_domain_tooltip") }}
+              </template>
+            </NsComboBox>
+            <h4 class="mg-bottom-sm">{{ $t("settings.clients") }}</h4>
+            <p class="mg-bottom-sm clients-help">
+              {{ $t("settings.clients_description") }}
+            </p>
+            <NsInlineNotification
+              v-if="error.clients"
+              kind="error"
+              :title="$t('settings.clients')"
+              :description="error.clients"
+              :showCloseButton="false"
+            />
+            <div
+              v-for="(client, index) in clients"
+              :key="index"
+              class="client-row"
+            >
+              <NsTextInput
+                :label="$t('settings.client_name')"
+                v-model.trim="client.name"
+                placeholder="ap-office"
+                :disabled="loading.getConfiguration || loading.configureModule"
+                class="client-field"
+              />
+              <NsTextInput
+                :label="$t('settings.client_ipaddr')"
+                v-model.trim="client.ipaddr"
+                placeholder="192.168.1.10"
+                :disabled="loading.getConfiguration || loading.configureModule"
+                class="client-field"
+              />
+              <NsPasswordInput
+                :newPasswordLabel="$t('settings.client_secret')"
+                v-model="client.secret"
+                :showPasswordLabel="$t('settings.show_secret')"
+                :hidePasswordLabel="$t('settings.hide_secret')"
+                :disabled="loading.getConfiguration || loading.configureModule"
+                class="client-field"
+              />
+              <div class="client-actions">
+                <NsButton
+                  kind="ghost"
+                  size="field"
+                  type="button"
+                  :disabled="
+                    loading.getConfiguration || loading.configureModule
+                  "
+                  @click="generateSecret(index)"
+                  >{{ $t("settings.generate_secret") }}</NsButton
+                >
+                <NsButton
+                  kind="danger--ghost"
+                  size="field"
+                  type="button"
+                  :icon="TrashCan20"
+                  :disabled="
+                    loading.getConfiguration || loading.configureModule
+                  "
+                  @click="removeClient(index)"
+                  >{{ $t("settings.remove_client") }}</NsButton
+                >
+              </div>
+            </div>
+            <NsButton
+              kind="secondary"
+              type="button"
+              :icon="Add20"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              @click="addClient"
+              class="mg-bottom"
+              >{{ $t("settings.add_client") }}</NsButton
+            >
+            <!-- advanced options -->
             <cv-accordion ref="accordion" class="maxwidth mg-bottom">
               <cv-accordion-item :open="toggleAccordion[0]">
                 <template slot="title">{{ $t("settings.advanced") }}</template>
-                <template slot="content">
-                </template>
+                <template slot="content"> </template>
               </cv-accordion-item>
             </cv-accordion>
             <cv-row v-if="error.configureModule">
@@ -125,9 +219,13 @@ export default {
       host: "",
       isLetsEncryptEnabled: false,
       isHttpToHttpsEnabled: true,
+      ldapDomain: "",
+      domainOptions: [],
+      clients: [],
       loading: {
         getConfiguration: false,
         configureModule: false,
+        listUserDomains: false,
       },
       error: {
         getConfiguration: "",
@@ -135,6 +233,9 @@ export default {
         host: "",
         lets_encrypt: "",
         http2https: "",
+        ldap_domain: "",
+        clients: "",
+        listUserDomains: "",
       },
     };
   },
@@ -143,6 +244,7 @@ export default {
   },
   created() {
     this.getConfiguration();
+    this.listUserDomains();
   },
   beforeRouteEnter(to, from, next) {
     next((vm) => {
@@ -218,7 +320,95 @@ export default {
         }
         isValidationOk = false;
       }
+      const names = new Set();
+      for (const client of this.clients) {
+        const name = (client.name || "").toLowerCase();
+        if (
+          !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,62}$/.test(client.name || "") ||
+          names.has(name)
+        ) {
+          this.error.clients = this.$t("settings.client_name_invalid");
+          isValidationOk = false;
+        } else if (!client.ipaddr) {
+          this.error.clients = this.$t("settings.client_ipaddr_invalid");
+          isValidationOk = false;
+        } else if (
+          !/^[\x20-\x21\x23-\x5b\x5d-\x7e]{8,128}$/.test(client.secret || "")
+        ) {
+          this.error.clients = this.$t("settings.client_secret_invalid");
+          isValidationOk = false;
+        }
+        names.add(name);
+      }
       return isValidationOk;
+    },
+    addClient() {
+      this.clients.push({ name: "", ipaddr: "", secret: "" });
+      this.generateSecret(this.clients.length - 1);
+    },
+    removeClient(index) {
+      this.clients.splice(index, 1);
+    },
+    generateSecret(index) {
+      const alphabet =
+        "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+      const random = new Uint32Array(32);
+      window.crypto.getRandomValues(random);
+      let secret = "";
+      for (const value of random) {
+        secret += alphabet[value % alphabet.length];
+      }
+      this.$set(this.clients[index], "secret", secret);
+    },
+    async listUserDomains() {
+      this.loading.listUserDomains = true;
+      this.error.listUserDomains = "";
+      const taskAction = "list-user-domains";
+      const eventId = this.getUuid();
+      this.core.$root.$once(
+        `${taskAction}-aborted-${eventId}`,
+        this.listUserDomainsAborted
+      );
+      this.core.$root.$once(
+        `${taskAction}-completed-${eventId}`,
+        this.listUserDomainsCompleted
+      );
+      const res = await to(
+        this.createClusterTaskForApp({
+          action: taskAction,
+          extra: {
+            title: this.$t("action." + taskAction),
+            isNotificationHidden: true,
+            eventId,
+          },
+        })
+      );
+      const err = res[0];
+      if (err) {
+        console.error(`error creating task ${taskAction}`, err);
+        this.error.listUserDomains = this.getErrorMessage(err);
+        this.loading.listUserDomains = false;
+      }
+    },
+    listUserDomainsAborted(taskResult, taskContext) {
+      console.error(`${taskContext.action} aborted`, taskResult);
+      this.error.listUserDomains = this.$t("error.generic_error");
+      this.loading.listUserDomains = false;
+    },
+    listUserDomainsCompleted(taskContext, taskResult) {
+      const options = [
+        { name: "-", label: this.$t("settings.no_ldap_domain"), value: "" },
+      ];
+      for (const domain of taskResult.output.domains) {
+        options.push({
+          name: domain.name,
+          label: domain.name,
+          value: domain.name,
+          type: domain.schema,
+        });
+      }
+      this.domainOptions = options;
+      this.loading.listUserDomains = false;
     },
     configureModuleValidationFailed(validationErrors) {
       this.loading.configureModule = false;
@@ -227,6 +417,12 @@ export default {
       for (const validationError of validationErrors) {
         const param = validationError.parameter;
         // set i18n error message
+        if (param == "clients") {
+          this.error.clients =
+            this.$t("settings." + validationError.error) +
+            (validationError.value ? ": " + validationError.value : "");
+          continue;
+        }
         this.error[param] = this.$t("settings." + validationError.error);
 
         if (!focusAlreadySet) {
@@ -271,6 +467,8 @@ export default {
             host: this.host,
             lets_encrypt: this.isLetsEncryptEnabled,
             http2https: this.isHttpToHttpsEnabled,
+            ldap_domain: this.ldapDomain,
+            clients: this.clients,
           },
           extra: {
             title: this.$t("settings.instance_configuration", {
@@ -311,7 +509,33 @@ export default {
   margin-bottom: $spacing-06;
 }
 
+.mg-bottom-sm {
+  margin-bottom: $spacing-03;
+}
+
 .maxwidth {
   max-width: 38rem;
+}
+
+.clients-help {
+  max-width: 38rem;
+}
+
+.client-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: $spacing-05;
+  margin-bottom: $spacing-06;
+}
+
+.client-field {
+  flex: 1 1 12rem;
+  max-width: 20rem;
+}
+
+.client-actions {
+  display: flex;
+  gap: $spacing-03;
 }
 </style>
