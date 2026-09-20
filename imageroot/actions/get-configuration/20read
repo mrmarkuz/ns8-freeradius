@@ -13,6 +13,7 @@ import os
 import sys
 import json
 import agent
+import radiusconf
 
 # Prepare return variable
 config = {}
@@ -21,6 +22,8 @@ config = {}
 config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
+# The secrets are returned on purpose: the admin has to copy them to the device.
+config["clients"] = radiusconf.read_clients()
 
 # Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)

@@ -7,7 +7,14 @@
         {
             "host": "freeradius.domain.org",
             "http2https": true,
-            "lets_encrypt": true
+            "lets_encrypt": true,
+            "clients": [
+                {
+                    "name": "ap-office",
+                    "ipaddr": "192.168.1.10",
+                    "secret": "use-a-long-random-string"
+                }
+            ]
         }
     ],
     "type": "object",
@@ -32,6 +39,39 @@
             "type": "boolean",
             "title": "HTTP to HTTPS redirection",
             "description": "Redirect all the HTTP requests to HTTPS"
+        },
+        "clients": {
+            "type": "array",
+            "title": "RADIUS clients",
+            "description": "Devices allowed to send requests (access points, switches, VPN gateways). When the property is missing the stored list is not changed.",
+            "items": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "ipaddr",
+                    "secret"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Short name of the client, used in the logs",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,62}$"
+                    },
+                    "ipaddr": {
+                        "type": "string",
+                        "description": "IPv4/IPv6 address or network in CIDR notation",
+                        "minLength": 2
+                    },
+                    "secret": {
+                        "type": "string",
+                        "description": "Shared secret, 8 to 128 printable ASCII characters without double quote and backslash Printable ASCII only.",
+                        "minLength": 8,
+                        "maxLength": 128,
+                        "pattern": "^[\\x20-\\x7E]+$"
+                    }
+                }
+            }
         }
     }
 }

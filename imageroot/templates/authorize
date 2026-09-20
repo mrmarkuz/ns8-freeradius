@@ -1,1 +1,7 @@
-bob	Cleartext-Password := "test"
+# Local users, checked before any user domain. Syntax:
+# https://www.freeradius.org/documentation/freeradius-server/3.2.7/raddb/mods-config/files/users.html
+#
+# The example is commented out on purpose: an account with a well-known
+# password would be a valid Wi-Fi/VPN login on every installation.
+#
+#bob	Cleartext-Password := "use-a-long-random-string"
