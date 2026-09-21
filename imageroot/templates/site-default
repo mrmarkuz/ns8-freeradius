@@ -1,0 +1,89 @@
+# Virtual server "default" of the NS8 FreeRADIUS module.
+# Generated file: changes are lost at the next start. Local users go to
+# state/config/authorize, MS-CHAP options to state/config/mschap.
+server default {
+listen {
+	type = auth
+	ipaddr = *
+	port = 0
+	limit {
+		max_connections = 16
+		lifetime = 0
+		idle_timeout = 30
+	}
+}
+listen {
+	type = acct
+	ipaddr = *
+	port = 0
+}
+
+authorize {
+	filter_username
+	preprocess
+	# "user", "user@realm" and "DOMAIN\user" all look up "user"
+	if (&User-Name =~ /^([^\\\\]*\\\\)?([^@\\\\]+)(@.*)?$/) {
+		update request {
+			&Stripped-User-Name := "%{2}"
+		}
+	}
+	chap
+	mschap
+	eap {
+		ok = return
+	}
+	files
+@LDAP_AUTHORIZE@
+	expiration
+	logintime
+	pap
+}
+
+authenticate {
+	Auth-Type PAP {
+		pap
+	}
+	Auth-Type CHAP {
+		chap
+	}
+	Auth-Type MS-CHAP {
+		mschap
+	}
+@LDAP_AUTHENTICATE@
+	eap
+}
+
+preacct {
+	preprocess
+	acct_unique
+}
+
+# Accounting requests are acknowledged and not stored: the container has no
+# persistent place for them.
+accounting {
+	attr_filter.accounting_response
+	ok
+}
+
+session {
+}
+
+post-auth {
+	update {
+		&reply: += &session-state:
+	}
+	remove_reply_message_if_eap
+	Post-Auth-Type REJECT {
+		attr_filter.access_reject
+		eap
+		remove_reply_message_if_eap
+	}
+}
+
+pre-proxy {
+}
+
+post-proxy {
+	eap
+}
+}
