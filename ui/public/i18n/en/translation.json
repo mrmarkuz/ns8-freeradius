@@ -38,7 +38,29 @@
     "instance_configuration": "Configure freeradius",
     "domain_already_used_in_traefik": "Domain already used in traefik",
     "host_pattern": "Must be a valid fully qualified domain name",
-    "host_format": "Must be a valid fully qualified domain name"
+    "host_format": "Must be a valid fully qualified domain name",
+    "ldap_domain": "User domain",
+    "choose_ldap_domain": "Choose a user domain",
+    "no_ldap_domain": "No user domain",
+    "ldap_domain_tooltip": "Accounts of this domain can log in with methods that send the password to the server inside TLS (TTLS/PAP) or over a trusted link (PAP). PEAP/MSCHAPv2 only works for the local users of state/config/authorize.",
+    "ldap_domain_not_found": "User domain not found",
+    "clients": "RADIUS clients",
+    "clients_description": "Devices that are allowed to send requests: access points, switches, VPN gateways. Enter the same shared secret on the device.",
+    "client_name": "Name",
+    "client_ipaddr": "IP address or network (CIDR)",
+    "client_secret": "Shared secret",
+    "show_secret": "Show secret",
+    "hide_secret": "Hide secret",
+    "generate_secret": "Generate",
+    "add_client": "Add client",
+    "remove_client": "Remove",
+    "client_name_invalid": "Client names must be unique and use letters, digits, dot, dash and underscore only",
+    "client_name_duplicate": "Client name used twice",
+    "client_ipaddr_invalid": "Not a valid IP address or network",
+    "client_secret_invalid": "The shared secret needs 8 to 128 printable ASCII characters, without double quote and backslash",
+    "clients_pattern": "Invalid client name",
+    "clients_minLength": "Value too short",
+    "clients_maxLength": "Value too long"
   },
   "about": {
     "title": "About"
@@ -54,7 +76,8 @@
     "get-name": "Get name",
     "list-backup-repositories": "List backup repositories",
     "list-backups": "List backups",
-    "list-installed-modules": "List installed modules"
+    "list-installed-modules": "List installed modules",
+    "list-user-domains": "List user domains"
   },
   "error": {
     "error": "Error",

@@ -15,7 +15,29 @@
         "test_field": "Testfeld",
         "configure_instance": "{instance} konfigurieren",
         "save": "Speichern",
-        "title": "Einstellungen"
+        "title": "Einstellungen",
+        "ldap_domain": "Benutzerdomäne",
+        "choose_ldap_domain": "Benutzerdomäne wählen",
+        "no_ldap_domain": "Keine Benutzerdomäne",
+        "ldap_domain_tooltip": "Konten dieser Domäne können sich mit Verfahren anmelden, die das Passwort innerhalb von TLS (TTLS/PAP) oder über eine vertrauenswürdige Strecke (PAP) an den Server senden. PEAP/MSCHAPv2 funktioniert nur für die lokalen Benutzer aus state/config/authorize.",
+        "ldap_domain_not_found": "Benutzerdomäne nicht gefunden",
+        "clients": "RADIUS-Clients",
+        "clients_description": "Geräte, die Anfragen senden dürfen: Access Points, Switches, VPN-Gateways. Auf dem Gerät dasselbe Shared Secret eintragen.",
+        "client_name": "Name",
+        "client_ipaddr": "IP-Adresse oder Netz (CIDR)",
+        "client_secret": "Shared Secret",
+        "show_secret": "Secret anzeigen",
+        "hide_secret": "Secret verbergen",
+        "generate_secret": "Erzeugen",
+        "add_client": "Client hinzufügen",
+        "remove_client": "Entfernen",
+        "client_name_invalid": "Client-Namen müssen eindeutig sein und dürfen nur Buchstaben, Ziffern, Punkt, Bindestrich und Unterstrich enthalten",
+        "client_name_duplicate": "Client-Name doppelt vergeben",
+        "client_ipaddr_invalid": "Keine gültige IP-Adresse oder kein gültiges Netz",
+        "client_secret_invalid": "Das Shared Secret braucht 8 bis 128 druckbare ASCII-Zeichen, ohne Anführungszeichen und Backslash",
+        "clients_pattern": "Ungültiger Client-Name",
+        "clients_minLength": "Wert zu kurz",
+        "clients_maxLength": "Wert zu lang"
     },
     "common": {
         "required": "erforderlich",
@@ -49,7 +71,8 @@
         "get-status": "Status abfragen",
         "configure-module": "Modul konfigurieren",
         "get-configuration": "Konfiguration abrufen",
-        "get-name": "Name abrufen"
+        "get-name": "Name abrufen",
+        "list-user-domains": "Benutzerdomänen auflisten"
     },
     "task": {
         "cannot_create_task": "{task} kann nicht erstellt werden"
