@@ -17,5 +17,8 @@ for evar in [
         "TRAEFIK_HOST",
         "TRAEFIK_HTTP2HTTPS",
         "TRAEFIK_LETS_ENCRYPT",
+        "RADIUS_LDAP_DOMAIN",
     ]:
-    agent.set_env(evar, original_environment[evar])
+    # a backup of an older module version does not have every variable
+    if evar in original_environment:
+        agent.set_env(evar, original_environment[evar])

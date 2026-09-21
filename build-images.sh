@@ -39,6 +39,7 @@ buildah config --entrypoint=/ \
     --label="org.nethserver.authorizations=traefik@node:fulladm node:fwadm cluster:accountconsumer" \
     --label="org.nethserver.tcp-ports-demand=1" \
     --label="org.nethserver.rootfull=0" \
+    --label="org.nethserver.max-per-node=1" \
     --label="org.nethserver.images=docker.io/freeradius/freeradius-server:3.2.7" \
     "${container}"
 # Commit the image
