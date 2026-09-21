@@ -91,6 +91,12 @@ def render_clients_conf(clients):
     return "\n".join(out)
 
 
+def _template(name):
+    with open(os.path.join(os.environ["AGENT_INSTALL_DIR"], "templates", name)) as fp:
+        return fp.read()
+
+
 def expand():
     os.makedirs(GENERATED_DIR, mode=0o700, exist_ok=True)
+    _write_private(os.path.join(GENERATED_DIR, "eap"), _template("eap"))
     _write_private(os.path.join(GENERATED_DIR, "clients.conf"), render_clients_conf(read_clients()))
